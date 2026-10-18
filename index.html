@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Alquiler del campo</title>
+<style>
+:root{
+  --bg:#f7f8f3; --card:#ffffff; --ink:#1c2a1f; --soft:#4d5d50; --line:#cfd8c9;
+  --green:#245c33; --green-ink:#ffffff; --gold:#f1e3a6; --gold-ink:#3d3200; --err:#a31515;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121a14; --card:#1b261e; --ink:#f0f4ec; --soft:#b5c4b6; --line:#35463a;
+    --green:#5fb877; --green-ink:#0d1a10; --gold:#4a4118; --gold-ink:#fbf0bd; --err:#ff9a9a;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121a14; --card:#1b261e; --ink:#f0f4ec; --soft:#b5c4b6; --line:#35463a;
+  --green:#5fb877; --green-ink:#0d1a10; --gold:#4a4118; --gold-ink:#fbf0bd; --err:#ff9a9a;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:22px/1.45 Verdana,Tahoma,system-ui,sans-serif}
+main{max-width:640px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:34px;line-height:1.15;margin:8px 0 4px}
+h2{font-size:26px;margin:0 0 12px}
+p{margin:0 0 12px}
+.sub{color:var(--soft)}
+section{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:20px;margin-top:20px}
+.names{display:grid;gap:12px}
+button,.btn{font:inherit;font-weight:700;min-height:64px;width:100%;border-radius:14px;border:3px solid var(--green);background:var(--card);color:var(--ink);padding:12px 16px;cursor:pointer;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center}
+button[aria-pressed="true"]{background:var(--green);color:var(--green-ink)}
+.main-btn{background:var(--green);color:var(--green-ink);font-size:26px;min-height:72px}
+.link-btn{margin-bottom:12px}
+:focus-visible{outline:4px solid var(--ink);outline-offset:3px}
+label{display:block;font-weight:700;margin:16px 0 6px}
+input{font:inherit;width:100%;min-height:64px;padding:10px 14px;border:3px solid var(--line);border-radius:14px;background:var(--bg);color:var(--ink)}
+input:focus{border-color:var(--green)}
+.err{color:var(--err);font-weight:700;margin:8px 0 0;min-height:0}
+.mes{border-radius:14px;padding:14px 16px;font-weight:700;background:var(--gold);color:var(--gold-ink)}
+.mes.ok{background:var(--green);color:var(--green-ink)}
+.fila{padding:14px 0;border-bottom:2px solid var(--line)}
+.fila:last-of-type{border-bottom:0}
+.fila .t{font-weight:700}
+.fila .d{color:var(--soft);font-size:19px}
+.fila .m{font-size:30px;font-weight:700}
+.total{background:var(--green);color:var(--green-ink);border-radius:14px;padding:16px;margin-top:8px}
+.total .m{font-size:36px;font-weight:700;line-height:1.1}
+.dest{background:var(--gold);color:var(--gold-ink);border-radius:12px;padding:10px 14px;margin:8px 0}
+.dest .d{color:inherit}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion: no-preference){html{scroll-behavior:smooth}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Alquiler del campo</h1>
+  <p class="sub">Calcule el pago en tres pasos.</p>
+
+  <section>
+    <h2>1. ¿Quién es?</h2>
+    <div class="names" id="names">
+      <button type="button" data-n="carmen" aria-pressed="false">Carmen</button>
+      <button type="button" data-n="ines" aria-pressed="false">Inés</button>
+      <button type="button" data-n="choqui" aria-pressed="false">Choqui</button>
+    </div>
+    <p id="mes" class="mes" hidden style="margin-top:16px"></p>
+  </section>
+
+  <section id="precios" hidden>
+    <h2>2. Precios de hoy</h2>
+    <p class="sub">Toque el botón, mire el precio en la página y vuelva acá para escribirlo.</p>
+
+    <div id="bloqueSoja">
+      <a class="btn link-btn" href="https://www.cac.bcr.com.ar/es/precios-de-pizarra/consultas" target="_blank" rel="noopener">Ver precio de la soja</a>
+      <label for="soja">Precio de la soja (pesos por tonelada)</label>
+      <input id="soja" type="text" inputmode="decimal" placeholder="Ejemplo: 350.000" autocomplete="off">
+      <p class="err" id="eSoja" role="alert"></p>
+    </div>
+
+    <div id="bloqueNov" style="margin-top:24px" hidden>
+      <a class="btn link-btn" href="https://www.mercadoagroganadero.com.ar/dll/hacienda2.dll/haciinfo000013" target="_blank" rel="noopener">Ver precio del novillo</a>
+      <label for="nov">Precio del novillo (pesos por kilo)</label>
+      <input id="nov" type="text" inputmode="decimal" placeholder="Ejemplo: 3.500" autocomplete="off">
+      <p class="err" id="eNov" role="alert"></p>
+    </div>
+  </section>
+
+  <section id="calc" hidden>
+    <h2>3. Calcular</h2>
+    <button type="button" class="main-btn" id="go">Calcular el pago</button>
+  </section>
+
+  <section id="res" hidden aria-live="polite"></section>
+</main>
+
+<script>
+const MESES=["","enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const KG_SOJA_HA=600, KG_NOV_HA=48, PAGOS=4;
+const DATOS={
+  carmen:{nombre:"Carmen",meses:[1,4,7,10],sojaHa:25.8,monteHa:29},
+  ines:{nombre:"Inés",meses:[1,4,7,10],sojaHa:42.2,acordadasHa:43},
+  choqui:{nombre:"Choqui",meses:[3,6,9,12],sojaHa:75,aCarmenHa:10}
+};
+const nf=new Intl.NumberFormat("es-AR",{minimumFractionDigits:2,maximumFractionDigits:2});
+const pesos=v=>"$ "+nf.format(v);
+const kgSoja=ha=>ha*KG_SOJA_HA/PAGOS, kgNov=ha=>ha*KG_NOV_HA/PAGOS;
+const $=id=>document.getElementById(id);
+let actual=null;
+
+function parsear(t){
+  let s=t.replace(/\$/g,"").replace(/\s/g,"");
+  if(s.includes(",")) s=s.replace(/\./g,"").replace(",",".");
+  else if(/^\d{1,3}(\.\d{3})+$/.test(s)) s=s.replace(/\./g,"");
+  const v=Number(s);
+  return (s!==""&&isFinite(v)&&v>0)?v:null;
+}
+
+function elegir(n){
+  actual=n; const d=DATOS[n];
+  document.querySelectorAll("#names button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.n===n));
+  const m=new Date().getMonth()+1, el=$("mes");
+  el.hidden=false;
+  if(d.meses.includes(m)){ el.className="mes ok"; el.textContent="✔ Este mes ("+MESES[m]+") corresponde pago."; }
+  else{
+    const sig=d.meses.find(x=>x>m)||d.meses[0];
+    el.className="mes"; el.textContent="Este mes ("+MESES[m]+") no corresponde pago. Próximo pago: "+MESES[sig]+".";
+  }
+  $("precios").hidden=false; $("calc").hidden=false; $("res").hidden=true;
+  $("bloqueNov").hidden=(n==="choqui");
+  $("eSoja").textContent=""; $("eNov").textContent="";
+}
+
+function fila(t,d,m){return '<div class="fila"><div class="t">'+t+'</div><div class="d">'+d+'</div><div class="m">'+m+'</div></div>';}
+
+function calcular(){
+  const d=DATOS[actual];
+  const ps=parsear($("soja").value), pn=actual==="choqui"?1:parsear($("nov").value);
+  $("eSoja").textContent=ps?"":"Escriba el precio de la soja con números. Ejemplo: 350.000";
+  $("eNov").textContent=pn?"":"Escriba el precio del novillo con números. Ejemplo: 3.500";
+  if(!ps||!pn) return;
+  const kg=ps/1000;
+  let h='<h2>Resultado de '+d.nombre+'</h2>', txt='Alquiler - '+d.nombre+'\n';
+  const ha=n=>nf.format(n);
+
+  if(actual==="carmen"){
+    const ks=kgSoja(d.sojaHa), is=ks*kg, kn=kgNov(d.monteHa), inn=kn*pn, tot=is+inn;
+    h+=fila("Soja ("+ha(d.sojaHa)+" ha)",nf.format(ks)+" kg",pesos(is));
+    h+=fila("Monte ("+ha(d.monteHa)+" ha)",nf.format(kn)+" kg de novillo",pesos(inn));
+    h+='<div class="total"><div>Total a cobrar</div><div class="m">'+pesos(tot)+'</div></div>';
+    txt+='Soja: '+pesos(is)+'\nMonte: '+pesos(inn)+'\nTOTAL: '+pesos(tot);
+  }else if(actual==="ines"){
+    const a=kgSoja(d.sojaHa)*kg, b=kgSoja(d.acordadasHa)*kg;
+    h+=fila("Según contrato ("+ha(d.sojaHa)+" ha)",nf.format(kgSoja(d.sojaHa))+" kg de soja",pesos(a));
+    h+='<div class="dest">'+fila("Acordado ("+ha(d.acordadasHa)+" ha)",nf.format(kgSoja(d.acordadasHa))+" kg de soja",pesos(b))+'</div>';
+    h+=fila("Diferencia","Acordado menos contrato",pesos(b-a));
+    h+='<div class="total"><div>Total a cobrar (acordado)</div><div class="m">'+pesos(b)+'</div></div>';
+    txt+='Según contrato ('+ha(d.sojaHa)+' ha): '+pesos(a)+'\nAcordado ('+ha(d.acordadasHa)+' ha): '+pesos(b)+'\nDiferencia: '+pesos(b-a);
+  }else{
+    const ks=kgSoja(d.sojaHa), is=ks*kg, kc=kgSoja(d.aCarmenHa), ic=kc*kg;
+    h+=fila("Soja ("+ha(d.sojaHa)+" ha)",nf.format(ks)+" kg",pesos(is));
+    h+='<div class="total"><div>Choqui debe abonar a Carmen ('+ha(d.aCarmenHa)+' ha)</div><div class="m">'+pesos(ic)+'</div><div>'+nf.format(kc)+' kg de soja</div></div>';
+    txt+='Soja ('+ha(d.sojaHa)+' ha): '+pesos(is)+'\nA Carmen ('+ha(d.aCarmenHa)+' ha): '+pesos(ic);
+  }
+  txt+='\n(Soja a '+pesos(ps)+' por tonelada'+(actual!=="choqui"?', novillo a '+pesos(pn)+' por kilo':'')+')';
+  const wa=(t,x)=>'<a class="btn link-btn" style="margin-top:16px" target="_blank" rel="noopener" href="https://wa.me/?text='+encodeURIComponent(x)+'">'+t+'</a>';
+  if(actual!=="choqui"){
+    const C=DATOS.carmen, I=DATOS.ines;
+    const cs=kgSoja(C.sojaHa)*kg, cm=kgNov(C.monteHa)*pn, ct=cs+cm, it=kgSoja(I.acordadasHa)*kg, T=ct+it;
+    h+='<h2 style="margin-top:32px">Total del campo</h2><p class="sub">Lo que debe pagar el arrendatario.</p>';
+    h+=fila("A pagar a Carmen","Soja "+ha(C.sojaHa)+" ha + monte "+ha(C.monteHa)+" ha",pesos(ct));
+    h+=fila("A pagar a Inés","Soja "+ha(I.acordadasHa)+" ha (acordado)",pesos(it));
+    h+='<div class="total"><div>TOTAL a pagar</div><div class="m">'+pesos(T)+'</div></div>';
+    const f=new Date();
+    const msg='Pago de alquiler - '+MESES[f.getMonth()+1]+' '+f.getFullYear()+'\n\nA pagar a Carmen: '+pesos(ct)+'\nA pagar a Inés: '+pesos(it)+'\n\nTOTAL: '+pesos(T)+'\n\n(Soja a '+pesos(ps)+' por tonelada, novillo a '+pesos(pn)+' por kilo)';
+    h+=wa("Enviar el total al arrendatario por WhatsApp",msg);
+    h+=wa("Enviar solo mi resultado por WhatsApp",txt);
+  }else{
+    h+=wa("Enviar por WhatsApp",txt);
+  }
+  const r=$("res"); r.innerHTML=h; r.hidden=false; r.scrollIntoView();
+}
+
+document.querySelectorAll("#names button").forEach(b=>b.addEventListener("click",()=>elegir(b.dataset.n)));
+$("go").addEventListener("click",calcular);
+</script>
+</body>
+</html>
